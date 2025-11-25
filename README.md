@@ -58,19 +58,26 @@ Create a Python virtual environment and install the required libraries:
 
 ## 3 - Configure Firewall 
 Open port 18000 to access the dashboard:
-<pre> 
-    sudo ufw allow 18000/tcp
-    sudo ufw reload
-
-    # Optional: If using firewalld:
-    sudo firewall-cmd --add-port=18000/tcp --permanent
-    sudo firewall-cmd --reload
+<div class="zeroclipboard-container">
+<pre>
+<code>sudo ufw allow 18000/tcp
+    sudo ufw reload</code>
 </pre>
+</div> 
+# Optional: If using firewalld:
 
+<div class="zeroclipboard-container">
+<pre>
+<code>sudo firewall-cmd --add-port=18000/tcp --permanent
+    sudo firewall-cmd --reload</code>
+</pre>
+</div>
+    
 ## 4 - Configure Systemd (Daemonize)
 1. Edit the provided uppymon.service file:
-   • Ensure "User=root" (or change to your specific user).
-   • Ensure paths match "/opt/uppymon".
+
+    • Ensure "User=root" (or change to your specific user).
+    • Ensure paths match "/opt/uppymon".
    
 3. Copy it to the systemd directory:
 <div class="zeroclipboard-container">
