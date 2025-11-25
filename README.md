@@ -59,8 +59,7 @@ deactivate
 
 ## 3 - Configure Firewall 
 Open port 18000 to access the dashboard:
-<pre> 
-    sudo ufw allow 18000/tcp 
+<pre> sudo ufw allow 18000/tcp 
     sudo ufw reload
 </pre>
 
