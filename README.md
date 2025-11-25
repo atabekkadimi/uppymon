@@ -107,11 +107,11 @@ sudo systemctl enable uppymon</code>
 ## 6 - Setup Email Alerts
 1. In the Settings menu:
    
-   #Gmail Sender: Your Gmail address
+   # **Gmail Sender:** Your Gmail address
 
-   #App Password: Generate a 16-character App Password from Google Account → Security → 2-Step Verification → App Passwords
+   # **App Password:** Generate a 16-character App Password from Google Account → Security → 2-Step Verification → App Passwords
 
-   #Receiver Email: Where you want alerts sent
+   # **Receiver Email:** Where you want alerts sent
    
 3. Click Save Settings
 
