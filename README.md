@@ -41,7 +41,8 @@ Upload the project files to /opt/uppymon. Ensure the structure looks exactly lik
 ## 2 - Install Dependencies
 Create a Python virtual environment and install the required libraries:
 
-</pre> cd /opt/uppymon
+<pre> 
+cd /opt/uppymon
 sudo apt update
 sudo apt install python3-venv python3-pip -y
 
@@ -53,7 +54,7 @@ source venv/bin/activate
 printf "flask\nflask_sqlalchemy\nrequests\nwerkzeug\n" > requirements.txt
 pip install -r requirements.txt
 
-deactivate
+deactivate 
 </pre>
 
 
