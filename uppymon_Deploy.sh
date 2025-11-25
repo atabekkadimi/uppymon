@@ -6,56 +6,60 @@ APP_DIR="/opt/uppymon"
 SERVICE_FILE="/etc/systemd/system/uppymon.service"
 PORT=18000
 
-echo "=== UppyMon Auto Installer (Flattened Repo, Templates Fixed) ==="
+echo "=== UppyMon Auto Installer ==="
 
 # Step 1: Stop existing service if running
 if systemctl is-active --quiet uppymon; then
-    echo "[1/10] Stopping existing service..."
+    echo "[1/11] Stopping existing service..."
     sudo systemctl stop uppymon
 fi
 
 # Step 2: Kill leftover processes
-echo "[2/10] Killing leftover processes..."
+echo "[2/11] Killing leftover processes..."
 sudo pkill -f "$APP_DIR/app.py" || true
 
-# Step 3: Remove old installation
-echo "[3/10] Removing old installation..."
+# Step 3: Free port 18000 if used
+echo "[3/11] Freeing port $PORT..."
+sudo fuser -k $PORT/tcp || true
+
+# Step 4: Remove old installation
+echo "[4/11] Removing old installation..."
 sudo rm -rf $APP_DIR
 
-# Step 4: Install system packages
-echo "[4/10] Installing system packages..."
+# Step 5: Install system packages
+echo "[5/11] Installing system packages..."
 sudo apt update
 sudo apt install -y git python3 python3-venv python3-pip ufw
 
-# Step 5: Clone repo to a temporary folder
+# Step 6: Clone repo to temporary folder
 TMP_DIR=$(mktemp -d)
-echo "[5/10] Cloning repository to temporary folder..."
+echo "[6/11] Cloning repository to temporary folder..."
 git clone $REPO_URL $TMP_DIR
 
-# Step 5a: Copy only the actual app contents to /opt/uppymon
-echo "[5a/10] Copying app contents to $APP_DIR..."
+# Step 7: Copy contents of repo to /opt/uppymon (flattened)
+echo "[7/11] Copying app contents to $APP_DIR..."
 sudo mkdir -p $APP_DIR
 sudo cp -r $TMP_DIR/uppymon/* $APP_DIR/
-sudo cp -r $TMP_DIR/uppymon/.* $APP_DIR/ 2>/dev/null || true  # hidden files
+sudo cp -r $TMP_DIR/uppymon/.* $APP_DIR/ 2>/dev/null || true
 sudo rm -rf $TMP_DIR
 
-# Step 6: Setup Python virtual environment
-echo "[6/10] Setting up virtual environment..."
+# Step 8: Setup Python virtual environment
+echo "[8/11] Setting up virtual environment..."
 cd $APP_DIR
 python3 -m venv venv
 $APP_DIR/venv/bin/pip install --upgrade pip
 
-# Step 6a: Install required Python packages
-echo "[6a/10] Installing Python dependencies..."
+# Step 8a: Install required Python packages
+echo "[8a/11] Installing Python dependencies..."
 $APP_DIR/venv/bin/pip install flask flask_sqlalchemy requests werkzeug
 
-# Step 7: Configure firewall
-echo "[7/10] Configuring firewall..."
+# Step 9: Configure firewall
+echo "[9/11] Configuring firewall..."
 sudo ufw allow ${PORT}/tcp || true
 sudo ufw reload || true
 
-# Step 8: Create systemd service using virtualenv Python directly
-echo "[8/10] Creating systemd service..."
+# Step 10: Create systemd service
+echo "[10/11] Creating systemd service..."
 sudo tee $SERVICE_FILE > /dev/null <<EOF
 [Unit]
 Description=UppyMon Uptime Monitor
@@ -72,20 +76,11 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
-# Step 9: Enable and start service
-echo "[9/10] Enabling and starting UppyMon service..."
+# Step 11: Enable and start service
+echo "[11/11] Enabling and starting UppyMon service..."
 sudo systemctl daemon-reload
 sudo systemctl enable uppymon
 sudo systemctl restart uppymon
-
-# Step 10: Optional database initialization
-if [ ! -f "$APP_DIR/uppymon.db" ]; then
-    echo "[10/10] Initializing database..."
-    $APP_DIR/venv/bin/python - <<EOF
-from app import db
-db.create_all()
-EOF
-fi
 
 echo ""
 echo "=============================================="
