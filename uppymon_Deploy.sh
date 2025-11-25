@@ -6,7 +6,7 @@ APP_DIR="/opt/uppymon"
 SERVICE_FILE="/etc/systemd/system/uppymon.service"
 PORT=18000
 
-echo "=== UppyMon Auto Installer (Virtualenv Python Direct) ==="
+echo "=== UppyMon Auto Installer (Flattened Repo) ==="
 
 # Step 1: Stop existing service if running
 if systemctl is-active --quiet uppymon; then
@@ -27,10 +27,15 @@ echo "[4/9] Installing system packages..."
 sudo apt update
 sudo apt install -y git python3 python3-venv python3-pip ufw
 
-# Step 5: Clone repo
-echo "[5/9] Cloning repository..."
-sudo git clone $REPO_URL $APP_DIR
-sudo chown -R root:root $APP_DIR
+# Step 5: Clone repo to a temporary folder
+TMP_DIR=$(mktemp -d)
+echo "[5/9] Cloning repository to temporary folder..."
+git clone $REPO_URL $TMP_DIR
+
+# Step 5a: Move only the actual app folder to /opt/uppymon
+echo "[5a/9] Moving app folder to $APP_DIR..."
+sudo mv $TMP_DIR/uppymon $APP_DIR
+sudo rm -rf $TMP_DIR  # remove temp folder
 
 # Step 6: Setup Python virtual environment
 echo "[6/9] Setting up virtual environment..."
