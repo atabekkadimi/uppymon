@@ -1,5 +1,5 @@
-# uppymon
-UppyMon is an uptime monitoring tool that can be deployed on your VPS. This guide will walk you through installing, uninstalling, and troubleshooting.
+# **UPPYMON**
+**UppyMon** is an uptime monitoring tool that can be deployed on your VPS. This guide will walk you through installing, uninstalling, and troubleshooting.
 
 
 # UppyMon Deployment
@@ -14,7 +14,6 @@ Copy and paste this command to install UppyMon:
 </pre>
 </div>
 
----
 
 ## Quick Uninstall
 
@@ -29,8 +28,8 @@ Copy and paste this command to remove UppyMon:
 # Manual Uninstall
 
 ## 1 - Upload Files
-Upload the project files to /opt/uppymon. Ensure the structure looks exactly like this:
-
+Upload the project files to **/opt/uppymon**.<br> 
+Ensure the structure looks exactly like this:
 <pre> 
     /opt/uppymon/app.py 
     /opt/uppymon/requirements.txt 
@@ -74,10 +73,10 @@ sudo firewall-cmd --reload</code>
 </div>
     
 ## 4 - Configure Systemd (Daemonize)
-1. Edit the provided uppymon.service file:
+1. Edit the provided **uppymon.service** file:
 
-    Ensure "User=root" (or change to your specific user).<br>
-    Ensure paths match "/opt/uppymon".<br>
+    **Ensure "User=root"** (or change to your specific user).<br>
+    Ensure paths match **"/opt/uppymon"** <br>
        
 2. Copy it to the systemd directory:
 <div class="zeroclipboard-container">
@@ -102,16 +101,16 @@ sudo systemctl enable uppymon</code>
 <pre> http://YOUR_SERVER_IP:18000 </pre>
 2. Default password is: 
 <pre> admin </pre>
-3. Important: Change the admin password immediately in Settings.
+3. **Important:** Change the admin password immediately in Settings.
 
 ## 6 - Setup Email Alerts
-1. In the Settings menu:
+1. In the **Settings** menu:
    
    **Gmail Sender:** Your Gmail address<br>
    **App Password:** Generate a 16-character App Password from Google Account → Security → 2-Step Verification → App Passwords<br>
    **Receiver Email:** Where you want alerts sent<br>
    
-3. Click Save Settings
+3. Click **Save Settings**
 
 ## 7 - Uninstallation
 To completely remove UppyMon:
