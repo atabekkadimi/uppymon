@@ -132,3 +132,31 @@ sudo systemctl daemon-reload</code>
 <code>sudo journalctl -u uppymon -f</code>
 </pre>
 </div>
+
+**Manual Debug Run**
+<div class="zeroclipboard-container">
+<pre>
+<code>sudo systemctl stop uppymon
+cd /opt/uppymon
+sudo ./venv/bin/python app.py
+</code>
+</pre>
+</div>
+
+**Reset Database ("Nuclear Option")**
+<div class="zeroclipboard-container">
+<pre>
+<code>sudo systemctl stop uppymon
+sudo pkill -f uppymon
+sudo rm -f /opt/uppymon/uppymon.db
+sudo chown -R root:root /opt/uppymon
+sudo systemctl start uppymon
+</code>
+</pre>
+</div>
+
+**Notes**
+• Ensure Python 3.10+ is installed.<br>
+• Make sure ports and firewall rules are correctly configured.<br>
+• Use the virtual environment to run UppyMon manually if needed.<br>
+
