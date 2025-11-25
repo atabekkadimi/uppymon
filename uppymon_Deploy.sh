@@ -1,5 +1,5 @@
 #!/bin/bash
-# UppyMon Auto Installer (Corrected Structure)
+# UppyMon Auto Installer (Updated for correct structure)
 
 set -e
 
@@ -32,16 +32,16 @@ echo "[5/11] Cloning repository..."
 TMP_DIR=$(mktemp -d)
 git clone "$REPO_URL" "$TMP_DIR"
 
-# 6. Copy only uppymon folder contents to APP_DIR
+# 6. Copy only main folder contents to APP_DIR
 echo "[6/11] Copying app files..."
-cp "$TMP_DIR/uppymon/app.py" "$APP_DIR/"
-cp -r "$TMP_DIR/uppymon/templates" "$APP_DIR/"
+cp "$TMP_DIR/app.py" "$APP_DIR/"
+cp -r "$TMP_DIR/templates" "$APP_DIR/"
 
 # 7. Setup Python virtual environment
 echo "[7/11] Setting up Python virtual environment..."
 python3 -m venv "$VENV_DIR"
 "$VENV_DIR/bin/pip" install --upgrade pip
-"$VENV_DIR/bin/pip" install -r "$TMP_DIR/uppymon/requirements.txt"
+"$VENV_DIR/bin/pip" install -r "$TMP_DIR/requirements.txt"
 
 # 8. Clean up temporary folder
 echo "[8/11] Cleaning up..."
