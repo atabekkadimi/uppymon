@@ -1,38 +1,33 @@
 #!/bin/bash
 set -e
 
-echo "=== UppyMon Auto Installer ==="
-
-# ---- CONFIG ----
-INSTALL_DIR="/opt/uppymon"
-REPO_URL="https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git"
+REPO_URL="https://github.com/atabekkadimi/uppymon.git"
+APP_DIR="/opt/uppymon"
 SERVICE_FILE="/etc/systemd/system/uppymon.service"
-PORT=18000
-# ----------------
 
-echo "[1/7] Installing dependencies..."
-sudo apt update
-sudo apt install -y git python3-venv python3-pip ufw
+echo "Updating system..."
+apt update -y
+apt install -y git python3 python3-venv python3-pip
 
-echo "[2/7] Cloning repository..."
-sudo rm -rf $INSTALL_DIR
-sudo git clone $REPO_URL $INSTALL_DIR
-sudo chown -R $USER:$USER $INSTALL_DIR
+echo "Cloning repo..."
+rm -rf $APP_DIR
+git clone $REPO_URL $APP_DIR
 
-echo "[3/7] Setting up Python environment..."
-cd $INSTALL_DIR
-python3 -m venv venv
-source venv/bin/activate
+echo "Setting permissions..."
+chown -R root:root $APP_DIR
+
+echo "Creating virtual environment..."
+python3 -m venv $APP_DIR/venv
+source $APP_DIR/venv/bin/activate
+
+echo "Installing requirements..."
 pip install --upgrade pip
-pip install -r requirements.txt
-deactivate
+if [ -f "$APP_DIR/requirements.txt" ]; then
+    pip install -r $APP_DIR/requirements.txt
+fi
 
-echo "[4/7] Firewall configuration..."
-sudo ufw allow ${PORT}/tcp || true
-sudo ufw reload || true
-
-echo "[5/7] Creating systemd service..."
-sudo bash -c "cat > ${SERVICE_FILE}" <<EOF
+echo "Creating systemd service..."
+cat <<EOF > $SERVICE_FILE
 [Unit]
 Description=UppyMon Uptime Monitor
 After=network.target
@@ -40,23 +35,20 @@ After=network.target
 [Service]
 User=root
 WorkingDirectory=/opt/uppymon
-Environment="PATH=/opt/uppymon/venv/bin"
 ExecStart=/opt/uppymon/venv/bin/python /opt/uppymon/app.py
 Restart=always
-RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-echo "[6/7] Activating systemd service..."
-sudo systemctl daemon-reload
-sudo systemctl start uppymon
-sudo systemctl enable uppymon
+echo "Reloading systemd..."
+systemctl daemon-reload
+systemctl enable uppymon
+systemctl restart uppymon
 
-echo "[7/7] Installation complete!"
-echo "-----------------------------------------"
-echo "UppyMon running at: http://YOUR_VPS_IP:18000"
-echo "Default login: admin"
-echo "-----------------------------------------"
-echo "To view logs: sudo journalctl -u uppymon -f"
+echo ""
+echo "=============================="
+echo "  UppyMon Deployment Complete!"
+echo "=============================="
+echo "Check logs with: journalctl -u uppymon -f"
