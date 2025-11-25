@@ -58,8 +58,9 @@ Create a Python virtual environment and install the required libraries:
 
 ## 3 - Configure Firewall 
 Open port 18000 to access the dashboard:
-<pre> sudo ufw allow 18000/tcp
-sudo ufw reload
+<pre> 
+    sudo ufw allow 18000/tcp
+    sudo ufw reload
 </pre>
 
 
