@@ -1,3 +1,0 @@
-flaskflask_sqlalchemy
-requests
-werkzeug
