@@ -53,6 +53,7 @@ source venv/bin/activate
 printf "flask\nflask_sqlalchemy\nrequests\nwerkzeug\n" > requirements.txt
 pip install -r requirements.txt
 
-deactivate</pre>
+deactivate
+</pre>
 
 
