@@ -42,20 +42,19 @@ Upload the project files to /opt/uppymon. Ensure the structure looks exactly lik
 Create a Python virtual environment and install the required libraries:
 
 <pre> 
-cd /opt/uppymon
-sudo apt update
-sudo apt install python3-venv python3-pip -y
+    cd /opt/uppymon
+    sudo apt update
+    sudo apt install python3-venv python3-pip -y
 
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate
+    # Create virtual environment
+        python3 -m venv venv
+        source venv/bin/activate
 
-# Install requirements
-printf "flask\nflask_sqlalchemy\nrequests\nwerkzeug\n" > requirements.txt
-pip install -r requirements.txt
-
-deactivate 
-</pre>
+    # Install requirements
+        printf "flask\nflask_sqlalchemy\nrequests\nwerkzeug\n" > requirements.txt
+        pip install -r requirements.txt
+        deactivate 
+    </pre>
 
 ## 3 - Configure Firewall 
 Open port 18000 to access the dashboard:
