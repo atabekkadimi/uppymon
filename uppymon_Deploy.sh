@@ -1,49 +1,51 @@
 #!/bin/bash
+# ==============================================
+#          UppyMon Auto Installer
+# ==============================================
+
 set -e
 
 echo "=== UppyMon Auto Installer ==="
 
-# 1/11 Kill leftover processes
+# 1. Kill leftover processes
 echo "[1/11] Killing leftover processes..."
 pkill -f app.py || true
 
-# 2/11 Free port 18000
+# 2. Free port 18000
 echo "[2/11] Freeing port 18000..."
 fuser -k 18000/tcp || true
 
-# 3/11 Remove old installation
+# 3. Remove old installation
 echo "[3/11] Removing old installation..."
 rm -rf /opt/uppymon
 
-# 4/11 Install system packages
+# 4. Install system packages
 echo "[4/11] Installing system packages..."
 apt update
-apt install -y git python3 python3-pip python3-venv ufw
+apt install -y git python3 python3-venv python3-pip ufw firewalld
 
-# 5/11 Clone repository
+# 5. Clone repository
 echo "[5/11] Cloning repository..."
-tmpdir=$(mktemp -d)
-git clone https://github.com/atabekkadimi/uppymon.git "$tmpdir"
+TMP_DIR=$(mktemp -d)
+git clone https://github.com/atabekkadimi/uppymon.git "$TMP_DIR"
 
-# 6/11 Copy app files (correct main structure)
+# 6. Copy files to /opt/uppymon
 echo "[6/11] Copying app files..."
 mkdir -p /opt/uppymon/templates
-cp "$tmpdir/app.py" /opt/uppymon/
-cp -r "$tmpdir/templates/"* /opt/uppymon/templates/
+cp "$TMP_DIR/app.py" /opt/uppymon/
+cp -r "$TMP_DIR/templates/"* /opt/uppymon/templates/
 
-# 7/11 Set up virtual environment
-echo "[7/11] Setting up virtual environment..."
+# Clean temp directory
+rm -rf "$TMP_DIR"
+
+# 7. Create virtual environment
+echo "[7/11] Setting up Python virtual environment..."
 python3 -m venv /opt/uppymon/venv
 /opt/uppymon/venv/bin/pip install --upgrade pip
-/opt/uppymon/venv/bin/pip install flask flask_sqlalchemy jinja2 requests
+/opt/uppymon/venv/bin/pip install flask jinja2 requests flask_sqlalchemy
 
-# 8/11 Set permissions
-echo "[8/11] Setting permissions..."
-chown -R root:root /opt/uppymon
-chmod -R 755 /opt/uppymon
-
-# 9/11 Create systemd service
-echo "[9/11] Creating systemd service..."
+# 8. Create systemd service
+echo "[8/11] Creating systemd service..."
 sudo tee /etc/systemd/system/uppymon.service > /dev/null <<EOF
 [Unit]
 Description=UppyMon Uptime Monitor
@@ -59,14 +61,28 @@ Restart=on-failure
 WantedBy=multi-user.target
 EOF
 
-# 10/11 Reload systemd and enable service
-echo "[10/11] Reloading systemd..."
-systemctl daemon-reload
-systemctl enable uppymon
+# 9. Enable and start service
+echo "[9/11] Enabling and starting UppyMon service..."
+sudo systemctl daemon-reload
+sudo systemctl enable uppymon
+sudo systemctl start uppymon
 
-# 11/11 Start service
-echo "[11/11] Starting UppyMon service..."
-systemctl restart uppymon
+# 10. Configure firewall
+echo "[10/11] Configuring firewall rules..."
+# UFW
+if command -v ufw >/dev/null 2>&1; then
+    echo "[*] Opening port 18000 in UFW..."
+    sudo ufw allow 18000/tcp
+    sudo ufw reload
+fi
+# Firewalld
+if command -v firewall-cmd >/dev/null 2>&1; then
+    echo "[*] Opening port 18000 in firewalld..."
+    sudo firewall-cmd --permanent --add-port=18000/tcp
+    sudo firewall-cmd --reload
+fi
 
+# 11. Cleanup
+echo "[11/11] Cleaning up..."
 echo "=== UppyMon Installed Successfully! ==="
 echo "Access your dashboard at http://<YOUR_VPS_IP>:18000"
