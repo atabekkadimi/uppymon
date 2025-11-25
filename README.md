@@ -71,7 +71,8 @@ Open port 18000 to access the dashboard:
 1. Edit the provided uppymon.service file:
    • Ensure "User=root" (or change to your specific user).
    • Ensure paths match "/opt/uppymon".
-2. Copy it to the systemd directory:
+   
+3. Copy it to the systemd directory:
 <div class="zeroclipboard-container">
 <pre>
 <code>sudo cp uppymon.service /etc/systemd/system/uppymon.service</code>
