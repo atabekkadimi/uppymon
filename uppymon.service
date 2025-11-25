@@ -1,0 +1,12 @@
+[Unit]
+Description=UppyMon Uptime Monitor
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/uppymon
+ExecStart=/opt/uppymon/venv/bin/python /opt/uppymon/app.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
