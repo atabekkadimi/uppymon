@@ -1,5 +1,5 @@
 # uppymon
-Servers Status Monitor
+UppyMon is an uptime monitoring tool that can be deployed on your VPS. This guide will walk you through installing, uninstalling, and troubleshooting.
 
 
 # UppyMon Deployment
@@ -25,3 +25,6 @@ Copy and paste this command to remove UppyMon:
 <code>bash &lt;(curl -sL https://raw.githubusercontent.com/atabekkadimi/uppymon/main/uppymon_Remove.sh)</code>
 </pre>
 </div>
+
+# Manual Uninstall
+##2. Upload Files
