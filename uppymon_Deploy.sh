@@ -1,87 +1,73 @@
 #!/bin/bash
-# UppyMon Auto Installer (Safe Reset)
-
-set -e
+# UppyMon Auto Installer (Flat Structure)
 
 APP_DIR="/opt/uppymon"
 SERVICE_FILE="/etc/systemd/system/uppymon.service"
-PORT=18000
 
 echo "=== UppyMon Auto Installer ==="
 
-# 1. Kill leftover processes
-echo "[1/11] Killing leftover processes..."
-pkill -f "app.py" || true
+# 1. Stop service if running
+echo "[1/10] Stopping any running service..."
+sudo systemctl stop uppymon 2>/dev/null
 
-# 2. Free port 18000
-echo "[2/11] Freeing port $PORT..."
-fuser -k $PORT/tcp || true
+# 2. Kill leftover processes
+echo "[2/10] Killing leftover processes..."
+sudo pkill -f "/opt/uppymon/venv/bin/python" 2>/dev/null || true
 
-# 3. Remove old installation
-echo "[3/11] Removing old installation..."
-sudo systemctl stop uppymon || true
-sudo rm -rf $APP_DIR
-sudo rm -f $SERVICE_FILE
+# 3. Free port 18000 if occupied
+echo "[3/10] Freeing port 18000..."
+sudo fuser -k 18000/tcp 2>/dev/null || true
 
-# 4. Install system packages
-echo "[4/11] Installing system packages..."
-sudo apt update
+# 4. Remove old installation
+echo "[4/10] Removing old installation..."
+sudo rm -rf "$APP_DIR"
+
+# 5. Install system packages
+echo "[5/10] Installing dependencies..."
+sudo apt update -y
 sudo apt install -y git python3 python3-pip python3-venv ufw
 
-# 5. Clone repository to temporary folder
-echo "[5/11] Cloning repository to temporary folder..."
+# 6. Clone repository to temporary folder
 TMP_DIR=$(mktemp -d)
-git clone https://github.com/atabekkadimi/uppymon.git $TMP_DIR
+echo "[6/10] Cloning repository..."
+git clone https://github.com/atabekkadimi/uppymon.git "$TMP_DIR"
 
-# 6. Create app directory
-echo "[6/11] Creating app directory..."
-sudo mkdir -p $APP_DIR
+# 7. Copy files to APP_DIR
+echo "[7/10] Setting up application directory..."
+sudo mkdir -p "$APP_DIR"
+sudo cp -r "$TMP_DIR/"* "$APP_DIR/"
 
-# 7. Copy app files, templates, and static
-echo "[7/11] Copying app contents to $APP_DIR..."
-sudo cp -r $TMP_DIR/uppymon/*.py $APP_DIR/
-sudo cp -r $TMP_DIR/uppymon/templates $APP_DIR/
-sudo cp -r $TMP_DIR/uppymon/static $APP_DIR/ || true
-
-# 8. Setup Python virtual environment and install dependencies
-echo "[8/11] Setting up virtual environment..."
-cd $APP_DIR
+# 8. Setup virtual environment
+echo "[8/10] Setting up virtual environment..."
+cd "$APP_DIR" || exit
 python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
-pip install flask flask_sqlalchemy requests werkzeug
-deactivate
+pip install flask jinja2
 
-# 9. Setup UFW firewall
-echo "[9/11] Configuring UFW firewall..."
-sudo ufw allow $PORT/tcp
-sudo ufw reload
-
-# 10. Setup systemd service
-echo "[10/11] Setting up systemd service..."
-sudo bash -c "cat > $SERVICE_FILE" <<EOL
+# 9. Create systemd service
+echo "[9/10] Creating systemd service..."
+sudo tee "$SERVICE_FILE" >/dev/null <<EOF
 [Unit]
 Description=UppyMon Uptime Monitor
 After=network.target
 
 [Service]
-User=root
+Type=simple
 WorkingDirectory=$APP_DIR
-ExecStart=$APP_DIR/venv/bin/python $APP_DIR/app.py
+ExecStart=$APP_DIR/venv/bin/python app.py
 Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
-EOL
+EOF
 
+# 10. Reload systemd and start service
+echo "[10/10] Starting UppyMon service..."
 sudo systemctl daemon-reload
 sudo systemctl enable uppymon
-sudo systemctl start uppymon
-
-# 11. Cleanup
-echo "[11/11] Cleaning temporary files..."
-rm -rf $TMP_DIR
+sudo systemctl restart uppymon
 
 echo "=== UppyMon Installed Successfully! ==="
-echo "Access your dashboard at http://<YOUR_VPS_IP>:$PORT"
-e
+echo "Access your dashboard at http://<YOUR_VPS_IP>:18000"
