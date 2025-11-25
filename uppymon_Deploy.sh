@@ -1,79 +1,77 @@
 #!/bin/bash
+# UppyMon Auto Installer (Fixed for correct structure)
+
 set -e
+
+APP_DIR="/opt/uppymon"
+VENV_DIR="$APP_DIR/venv"
+SERVICE_FILE="/etc/systemd/system/uppymon.service"
+REPO_URL="https://github.com/atabekkadimi/uppymon.git"
+PORT=18000
 
 echo "=== UppyMon Auto Installer ==="
 
-# 1. Stop and remove old service
-echo "[1/10] Stopping old service if exists..."
-sudo systemctl stop uppymon 2>/dev/null || true
-sudo systemctl disable uppymon 2>/dev/null || true
+# 1. Kill leftover processes
+echo "[1/10] Killing leftover processes..."
+pkill -f "python.*app.py" || true
 
-# 2. Kill any process on port 18000
-echo "[2/10] Freeing port 18000..."
-PID=$(sudo lsof -t -i :18000 || true)
-if [ -n "$PID" ]; then
-    sudo kill -9 $PID
-fi
+# 2. Free port
+echo "[2/10] Freeing port $PORT..."
+fuser -k $PORT/tcp || true
 
 # 3. Remove old installation
 echo "[3/10] Removing old installation..."
-sudo rm -rf /opt/uppymon
+rm -rf "$APP_DIR"
 
-# 4. Install system dependencies
+# 4. Install system packages
 echo "[4/10] Installing system packages..."
-sudo apt update
-sudo apt install -y git python3 python3-pip python3-venv ufw
+apt update
+apt install -y git python3 python3-venv python3-pip ufw
 
-# 5. Clone repository to a temp folder
+# 5. Clone repository directly to /opt/uppymon
 echo "[5/10] Cloning repository..."
-TMPDIR=$(mktemp -d)
-git clone https://github.com/atabekkadimi/uppymon.git "$TMPDIR"
+git clone "$REPO_URL" "$APP_DIR"
 
-# 6. Copy only necessary files to /opt/uppymon
-echo "[6/10] Copying app files..."
-sudo mkdir -p /opt/uppymon
-sudo cp "$TMPDIR/app.py" /opt/uppymon/
-sudo cp -r "$TMPDIR/templates" /opt/uppymon/
+# 6. Create Python virtual environment
+echo "[6/10] Creating Python virtual environment..."
+python3 -m venv "$VENV_DIR"
 
-# 7. Setup Python virtual environment
-echo "[7/10] Setting up Python virtual environment..."
-cd /opt/uppymon
-python3 -m venv venv
-source venv/bin/activate
-pip install --upgrade pip
-# Install requirements if any inside venv
-if [ -f "$TMPDIR/requirements.txt" ]; then
-    pip install -r "$TMPDIR/requirements.txt"
+# 7. Install Python dependencies if requirements.txt exists
+if [ -f "$APP_DIR/requirements.txt" ]; then
+    echo "[7/10] Installing Python dependencies..."
+    "$VENV_DIR/bin/pip" install --upgrade pip
+    "$VENV_DIR/bin/pip" install -r "$APP_DIR/requirements.txt"
+else
+    echo "[7/10] No requirements.txt found, skipping..."
 fi
-deactivate
 
-# 8. Create systemd service
-echo "[8/10] Creating systemd service..."
-sudo tee /etc/systemd/system/uppymon.service > /dev/null <<EOF
+# 8. Set correct permissions
+echo "[8/10] Setting permissions..."
+chown -R root:root "$APP_DIR"
+chmod -R 755 "$APP_DIR"
+
+# 9. Create systemd service
+echo "[9/10] Creating systemd service..."
+cat > "$SERVICE_FILE" <<EOL
 [Unit]
 Description=UppyMon Uptime Monitor
 After=network.target
 
 [Service]
-Type=simple
-WorkingDirectory=/opt/uppymon
-ExecStart=/opt/uppymon/venv/bin/python app.py
+User=root
+WorkingDirectory=$APP_DIR
+ExecStart=$VENV_DIR/bin/python $APP_DIR/app.py
 Restart=always
-RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
-EOF
+EOL
 
-# 9. Reload systemd and start service
-echo "[9/10] Enabling and starting service..."
-sudo systemctl daemon-reload
-sudo systemctl enable uppymon
-sudo systemctl start uppymon
-
-# 10. Clean up
-echo "[10/10] Cleaning up..."
-rm -rf "$TMPDIR"
+# 10. Enable and start service
+echo "[10/10] Enabling and starting UppyMon..."
+systemctl daemon-reload
+systemctl enable uppymon
+systemctl start uppymon
 
 echo "=== UppyMon Installed Successfully! ==="
-echo "Access your dashboard at http://<YOUR_VPS_IP>:18000"
+echo "Access your dashboard at http://<YOUR_VPS_IP>:$PORT"
