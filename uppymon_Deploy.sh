@@ -1,53 +1,49 @@
 #!/bin/bash
-# UppyMon Auto Installer
-
-set -e
+# === UppyMon Auto Installer ===
 
 APP_DIR="/opt/uppymon"
-TMP_DIR="$(mktemp -d)"
+TMP_DIR=$(mktemp -d)
 REPO_URL="https://github.com/atabekkadimi/uppymon.git"
 PORT=18000
 
 echo "=== UppyMon Auto Installer ==="
 
-# 2. Kill leftover processes
-echo "[2/11] Killing leftover processes..."
-pkill -f "app.py" || true
+# 1. Kill leftover processes
+echo "[1/11] Killing leftover processes..."
+pkill -f "python.*app.py" 2>/dev/null || true
 
-# 3. Free port
-echo "[3/11] Freeing port $PORT..."
-fuser -k $PORT/tcp || true
+# 2. Free port
+echo "[2/11] Freeing port $PORT..."
+fuser -k $PORT/tcp 2>/dev/null || true
 
-# 4. Remove old installation
-echo "[4/11] Removing old installation..."
+# 3. Remove old installation
+echo "[3/11] Removing old installation..."
 rm -rf "$APP_DIR"
 
-# 5. Install system packages
-echo "[5/11] Installing system packages..."
+# 4. Install system packages
+echo "[4/11] Installing system packages..."
 apt update
 apt install -y git python3 python3-venv python3-pip ufw
 
-# 6. Clone repository
-echo "[6/11] Cloning repository..."
+# 5. Clone repository
+echo "[5/11] Cloning repository..."
 git clone "$REPO_URL" "$TMP_DIR"
 
-# 7. Copy app files
-echo "[7/11] Copying app files..."
+# 6. Copy app files
+echo "[6/11] Copying app files..."
 mkdir -p "$APP_DIR"
 cp "$TMP_DIR/app.py" "$APP_DIR/"
 cp -r "$TMP_DIR/templates" "$APP_DIR/"
 
-# 8. Setup virtual environment
-echo "[8/11] Setting up Python virtual environment..."
+# 7. Setup virtual environment
+echo "[7/11] Setting up Python virtual environment..."
 python3 -m venv "$APP_DIR/venv"
 "$APP_DIR/venv/bin/pip" install --upgrade pip
-"$APP_DIR/venv/bin/pip" install -r "$TMP_DIR/requirements.txt"
+"$APP_DIR/venv/bin/pip" install -r "$APP_DIR/requirements.txt" 2>/dev/null || true
 
-# 9. Setup systemd service
-echo "[9/11] Creating systemd service..."
-SERVICE_FILE="/etc/systemd/system/uppymon.service"
-
-cat > "$SERVICE_FILE" <<EOL
+# 8. Create systemd service
+echo "[8/11] Creating systemd service..."
+cat > /etc/systemd/system/uppymon.service <<EOL
 [Unit]
 Description=UppyMon Uptime Monitor
 After=network.target
@@ -62,15 +58,17 @@ Restart=always
 WantedBy=multi-user.target
 EOL
 
+# 9. Reload systemd
+echo "[9/11] Reloading systemd..."
 systemctl daemon-reload
-systemctl enable uppymon
 
-# 10. Start service
-echo "[10/11] Starting UppyMon service..."
+# 10. Enable and start service
+echo "[10/11] Enabling and starting UppyMon service..."
+systemctl enable uppymon
 systemctl restart uppymon
 
 # 11. Cleanup
-echo "[11/11] Cleaning temporary files..."
+echo "[11/11] Cleaning up..."
 rm -rf "$TMP_DIR"
 
 echo "=== UppyMon Installed Successfully! ==="
