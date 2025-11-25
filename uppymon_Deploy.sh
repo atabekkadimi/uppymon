@@ -8,6 +8,9 @@ PORT=18000
 
 echo "=== UppyMon Auto Installer ==="
 
+# Step 0: ensure we are in safe directory
+cd /tmp || exit 1
+
 # Step 1: Stop existing service if running
 if systemctl is-active --quiet uppymon; then
     echo "[1/11] Stopping existing service..."
