@@ -1,7 +1,8 @@
 # **UPPYMON**
 **UppyMon** is an uptime monitoring tool that can be deployed on your VPS. This guide will walk you through installing, uninstalling, and troubleshooting.<br>
 
-https://github.com/atabekkadimi/uppymon/blob/9f285abb0c3975b5ae2c68b23eab9b4a11d6e957/images/UppyMon.jpg
+![UppyMon Dashboard](https://github.com/atabekkadimi/uppymon/raw/9f285abb0c3975b5ae2c68b23eab9b4a11d6e957/images/UppyMon.jpg)
+
 
 # UppyMon Deployment
 
