@@ -1,43 +1,49 @@
 #!/bin/bash
 set -e
 
-INSTALL_DIR="/opt/uppymon"
-REPO_URL="https://github.com/atabekkadimi/uppymon.git"
-
 echo "=== UppyMon Auto Installer ==="
 
-# Stop old service if exists
-echo "[1/11] Stopping leftover service..."
-sudo systemctl stop uppymon || true
+# 1/11 Kill leftover processes
+echo "[1/11] Killing leftover processes..."
+pkill -f app.py || true
 
-# Remove old installation
-echo "[2/11] Removing old installation..."
-sudo rm -rf "$INSTALL_DIR"
+# 2/11 Free port 18000
+echo "[2/11] Freeing port 18000..."
+fuser -k 18000/tcp || true
 
-# Create install directory
-sudo mkdir -p "$INSTALL_DIR"
+# 3/11 Remove old installation
+echo "[3/11] Removing old installation..."
+rm -rf /opt/uppymon
 
-# Clone repository to temp folder
-echo "[3/11] Cloning repository..."
-TMP_DIR=$(mktemp -d)
-git clone "$REPO_URL" "$TMP_DIR"
+# 4/11 Install system packages
+echo "[4/11] Installing system packages..."
+apt update
+apt install -y git python3 python3-pip python3-venv ufw
 
-# Copy only the main files
-echo "[4/11] Copying app files..."
-sudo cp "$TMP_DIR/app.py" "$INSTALL_DIR/"
-sudo cp -r "$TMP_DIR/templates" "$INSTALL_DIR/"
+# 5/11 Clone repository
+echo "[5/11] Cloning repository..."
+tmpdir=$(mktemp -d)
+git clone https://github.com/atabekkadimi/uppymon.git "$tmpdir"
 
-# Clean temp
-rm -rf "$TMP_DIR"
+# 6/11 Copy app files (correct main structure)
+echo "[6/11] Copying app files..."
+mkdir -p /opt/uppymon/templates
+cp "$tmpdir/app.py" /opt/uppymon/
+cp -r "$tmpdir/templates/"* /opt/uppymon/templates/
 
-# Setup virtual environment
-echo "[5/11] Setting up virtual environment..."
-python3 -m venv "$INSTALL_DIR/venv"
-"$INSTALL_DIR/venv/bin/pip" install --upgrade pip
-"$INSTALL_DIR/venv/bin/pip" install flask requests jinja2
+# 7/11 Set up virtual environment
+echo "[7/11] Setting up virtual environment..."
+python3 -m venv /opt/uppymon/venv
+/opt/uppymon/venv/bin/pip install --upgrade pip
+/opt/uppymon/venv/bin/pip install flask flask_sqlalchemy jinja2 requests
 
-# Setup systemd service
-echo "[6/11] Setting up systemd service..."
+# 8/11 Set permissions
+echo "[8/11] Setting permissions..."
+chown -R root:root /opt/uppymon
+chmod -R 755 /opt/uppymon
+
+# 9/11 Create systemd service
+echo "[9/11] Creating systemd service..."
 sudo tee /etc/systemd/system/uppymon.service > /dev/null <<EOF
 [Unit]
 Description=UppyMon Uptime Monitor
@@ -45,17 +51,22 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=$INSTALL_DIR
-ExecStart=$INSTALL_DIR/venv/bin/python $INSTALL_DIR/app.py
+WorkingDirectory=/opt/uppymon
+ExecStart=/opt/uppymon/venv/bin/python /opt/uppymon/app.py
 Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-sudo systemctl daemon-reload
-sudo systemctl enable uppymon
-sudo systemctl restart uppymon
+# 10/11 Reload systemd and enable service
+echo "[10/11] Reloading systemd..."
+systemctl daemon-reload
+systemctl enable uppymon
+
+# 11/11 Start service
+echo "[11/11] Starting UppyMon service..."
+systemctl restart uppymon
 
 echo "=== UppyMon Installed Successfully! ==="
 echo "Access your dashboard at http://<YOUR_VPS_IP>:18000"
