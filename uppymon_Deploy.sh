@@ -6,7 +6,7 @@ APP_DIR="/opt/uppymon"
 SERVICE_FILE="/etc/systemd/system/uppymon.service"
 PORT=18000
 
-echo "=== UppyMon Auto Installer (Safe Reset + Requirements Check) ==="
+echo "=== UppyMon Auto Installer (No requirements.txt needed) ==="
 
 # Step 1: Stop existing service if running
 if systemctl is-active --quiet uppymon; then
@@ -23,7 +23,7 @@ echo "[3/9] Removing old installation..."
 sudo rm -rf $APP_DIR
 
 # Step 4: Install system packages
-echo "[4/9] Installing dependencies..."
+echo "[4/9] Installing system packages..."
 sudo apt update
 sudo apt install -y git python3 python3-venv python3-pip ufw
 
@@ -39,14 +39,9 @@ python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
 
-# Step 6a: Install Python packages
-if [ -f "requirements.txt" ]; then
-    echo "[INFO] Installing packages from requirements.txt..."
-    pip install -r requirements.txt
-else
-    echo "[INFO] No requirements.txt found. Installing default packages..."
-    pip install flask flask_sqlalchemy requests werkzeug
-fi
+# Step 6a: Install default Python packages
+echo "[INFO] Installing required Python packages..."
+pip install flask flask_sqlalchemy requests werkzeug
 deactivate
 
 # Step 7: Configure firewall
