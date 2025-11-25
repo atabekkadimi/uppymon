@@ -124,3 +124,11 @@ sudo rm -f /etc/systemd/system/uppymon.service
 sudo systemctl daemon-reload</code>
 </pre>
 </div>
+
+## Troubleshooting
+**View Service Logs**
+<div class="zeroclipboard-container">
+<pre>
+<code>sudo journalctl -u uppymon -f</code>
+</pre>
+</div>
