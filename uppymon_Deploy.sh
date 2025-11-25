@@ -6,7 +6,7 @@ APP_DIR="/opt/uppymon"
 SERVICE_FILE="/etc/systemd/system/uppymon.service"
 PORT=18000
 
-echo "=== UppyMon Auto Installer (No requirements.txt needed) ==="
+echo "=== UppyMon Auto Installer (Virtualenv Python Direct) ==="
 
 # Step 1: Stop existing service if running
 if systemctl is-active --quiet uppymon; then
@@ -36,20 +36,18 @@ sudo chown -R root:root $APP_DIR
 echo "[6/9] Setting up virtual environment..."
 cd $APP_DIR
 python3 -m venv venv
-source venv/bin/activate
-pip install --upgrade pip
+$APP_DIR/venv/bin/pip install --upgrade pip
 
 # Step 6a: Install default Python packages
 echo "[INFO] Installing required Python packages..."
-pip install flask flask_sqlalchemy requests werkzeug
-deactivate
+$APP_DIR/venv/bin/pip install flask flask_sqlalchemy requests werkzeug
 
 # Step 7: Configure firewall
 echo "[7/9] Configuring firewall..."
 sudo ufw allow ${PORT}/tcp || true
 sudo ufw reload || true
 
-# Step 8: Create systemd service
+# Step 8: Create systemd service using virtualenv Python directly
 echo "[8/9] Creating systemd service..."
 sudo tee $SERVICE_FILE > /dev/null <<EOF
 [Unit]
@@ -59,7 +57,7 @@ After=network.target
 [Service]
 User=root
 WorkingDirectory=$APP_DIR
-ExecStart=/bin/bash -c 'source $APP_DIR/venv/bin/activate && python $APP_DIR/app.py'
+ExecStart=$APP_DIR/venv/bin/python $APP_DIR/app.py
 Restart=always
 RestartSec=5
 
