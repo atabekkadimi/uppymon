@@ -1,69 +1,65 @@
 #!/bin/bash
+# UppyMon Auto Installer (Safe Reset)
+
 set -e
 
-REPO_URL="https://github.com/atabekkadimi/uppymon.git"
 APP_DIR="/opt/uppymon"
 SERVICE_FILE="/etc/systemd/system/uppymon.service"
 PORT=18000
 
 echo "=== UppyMon Auto Installer ==="
 
-# Step 0: ensure we are in safe directory
-cd /tmp || exit 1
+# 1. Kill leftover processes
+echo "[1/11] Killing leftover processes..."
+pkill -f "app.py" || true
 
-# Step 1: Stop existing service if running
-if systemctl is-active --quiet uppymon; then
-    echo "[1/11] Stopping existing service..."
-    sudo systemctl stop uppymon
-fi
+# 2. Free port 18000
+echo "[2/11] Freeing port $PORT..."
+fuser -k $PORT/tcp || true
 
-# Step 2: Kill leftover processes
-echo "[2/11] Killing leftover processes..."
-sudo pkill -f "$APP_DIR/app.py" || true
-
-# Step 3: Free port 18000 if used
-echo "[3/11] Freeing port $PORT..."
-sudo fuser -k $PORT/tcp || true
-
-# Step 4: Remove old installation
-echo "[4/11] Removing old installation..."
+# 3. Remove old installation
+echo "[3/11] Removing old installation..."
+sudo systemctl stop uppymon || true
 sudo rm -rf $APP_DIR
+sudo rm -f $SERVICE_FILE
 
-# Step 5: Install system packages
-echo "[5/11] Installing system packages..."
+# 4. Install system packages
+echo "[4/11] Installing system packages..."
 sudo apt update
-sudo apt install -y git python3 python3-venv python3-pip ufw
+sudo apt install -y git python3 python3-pip python3-venv ufw
 
-# Step 6: Clone repo to temporary folder
+# 5. Clone repository to temporary folder
+echo "[5/11] Cloning repository to temporary folder..."
 TMP_DIR=$(mktemp -d)
-echo "[6/11] Cloning repository to temporary folder..."
-git clone $REPO_URL $TMP_DIR
+git clone https://github.com/atabekkadimi/uppymon.git $TMP_DIR
 
-# Step 7: Copy contents of repo to /opt/uppymon (flattened)
-echo "[7/11] Copying app contents to $APP_DIR..."
+# 6. Create app directory
+echo "[6/11] Creating app directory..."
 sudo mkdir -p $APP_DIR
-sudo cp -r $TMP_DIR/uppymon/* $APP_DIR/
-sudo cp -r $TMP_DIR/uppymon/.* $APP_DIR/ 2>/dev/null || true
-sudo rm -rf $TMP_DIR
 
-# Step 8: Setup Python virtual environment
+# 7. Copy app files, templates, and static
+echo "[7/11] Copying app contents to $APP_DIR..."
+sudo cp -r $TMP_DIR/uppymon/*.py $APP_DIR/
+sudo cp -r $TMP_DIR/uppymon/templates $APP_DIR/
+sudo cp -r $TMP_DIR/uppymon/static $APP_DIR/ || true
+
+# 8. Setup Python virtual environment and install dependencies
 echo "[8/11] Setting up virtual environment..."
 cd $APP_DIR
 python3 -m venv venv
-$APP_DIR/venv/bin/pip install --upgrade pip
+source venv/bin/activate
+pip install --upgrade pip
+pip install flask flask_sqlalchemy requests werkzeug
+deactivate
 
-# Step 8a: Install required Python packages
-echo "[8a/11] Installing Python dependencies..."
-$APP_DIR/venv/bin/pip install flask flask_sqlalchemy requests werkzeug
+# 9. Setup UFW firewall
+echo "[9/11] Configuring UFW firewall..."
+sudo ufw allow $PORT/tcp
+sudo ufw reload
 
-# Step 9: Configure firewall
-echo "[9/11] Configuring firewall..."
-sudo ufw allow ${PORT}/tcp || true
-sudo ufw reload || true
-
-# Step 10: Create systemd service
-echo "[10/11] Creating systemd service..."
-sudo tee $SERVICE_FILE > /dev/null <<EOF
+# 10. Setup systemd service
+echo "[10/11] Setting up systemd service..."
+sudo bash -c "cat > $SERVICE_FILE" <<EOL
 [Unit]
 Description=UppyMon Uptime Monitor
 After=network.target
@@ -73,22 +69,19 @@ User=root
 WorkingDirectory=$APP_DIR
 ExecStart=$APP_DIR/venv/bin/python $APP_DIR/app.py
 Restart=always
-RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
-EOF
+EOL
 
-# Step 11: Enable and start service
-echo "[11/11] Enabling and starting UppyMon service..."
 sudo systemctl daemon-reload
 sudo systemctl enable uppymon
-sudo systemctl restart uppymon
+sudo systemctl start uppymon
 
-echo ""
-echo "=============================================="
-echo " UppyMon Deployment Complete! Service running."
-echo " URL: http://YOUR_VPS_IP:18000"
-echo " Default login: admin"
-echo " Logs: sudo journalctl -u uppymon -f"
-echo "=============================================="
+# 11. Cleanup
+echo "[11/11] Cleaning temporary files..."
+rm -rf $TMP_DIR
+
+echo "=== UppyMon Installed Successfully! ==="
+echo "Access your dashboard at http://<YOUR_VPS_IP>:$PORT"
+e
