@@ -61,6 +61,10 @@ Open port 18000 to access the dashboard:
 <pre> 
     sudo ufw allow 18000/tcp
     sudo ufw reload
+
+    # Optional: If using firewalld:
+    sudo firewall-cmd --add-port=18000/tcp --permanent
+    sudo firewall-cmd --reload
 </pre>
 
 
