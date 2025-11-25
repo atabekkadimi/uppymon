@@ -1,3 +1,4 @@
-flaskflask_sqlalchemy
+flask
+flask_sqlalchemy
 requests
 werkzeug
