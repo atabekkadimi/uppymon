@@ -27,4 +27,5 @@ Copy and paste this command to remove UppyMon:
 </div>
 
 # Manual Uninstall
-##2. Upload Files
+
+## 1 - Upload Files
