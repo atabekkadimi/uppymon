@@ -21,7 +21,7 @@ Copy and paste this command to remove UppyMon:
 
 <div class="zeroclipboard-container">
 <pre>
-<code>bash &lt;(curl -sL https://raw.githubusercontent.com/atabekkadimi/uppymon/main/uppymon_Remove.sh)</code>
+<code>bash <(curl -sL https://raw.githubusercontent.com/atabekkadimi/uppymon/main/uppymon_Uninstall.sh)</code>
 </pre>
 </div>
 
