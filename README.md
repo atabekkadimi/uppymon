@@ -37,3 +37,22 @@ Upload the project files to /opt/uppymon. Ensure the structure looks exactly lik
     /opt/uppymon/uppymon.service 
     /opt/uppymon/templates/index.html <-- Must be inside 'templates' folder 
 </pre>
+
+## 2 - Install Dependencies
+Create a Python virtual environment and install the required libraries:
+
+</pre> cd /opt/uppymon
+sudo apt update
+sudo apt install python3-venv python3-pip -y
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install requirements
+printf "flask\nflask_sqlalchemy\nrequests\nwerkzeug\n" > requirements.txt
+pip install -r requirements.txt
+
+deactivate</pre>
+
+
