@@ -76,9 +76,9 @@ sudo firewall-cmd --reload</code>
 ## 4 - Configure Systemd (Daemonize)
 1. Edit the provided uppymon.service file:
 
-    # Ensure "User=root" (or change to your specific user).
-    # Ensure paths match "/opt/uppymon".
-   
+    Ensure "User=root" (or change to your specific user).<br>
+    Ensure paths match "/opt/uppymon".<br>
+       
 2. Copy it to the systemd directory:
 <div class="zeroclipboard-container">
 <pre>
@@ -99,7 +99,7 @@ sudo systemctl enable uppymon</code>
 ## 5 - Access & Login
 
 1. Open your browser and navigate to:
-<pre> http://<YOUR_VPS_IP>:18000 </pre>
+<pre> http://YOUR_SERVER_IP:18000 </pre>
 2. Default password is: 
 <pre> admin </pre>
 3. Important: Change the admin password immediately in Settings.
